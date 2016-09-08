@@ -28,29 +28,61 @@ window.plugin.maxfieldplanner = function() {};
 
 // Plugin variables and local storage data
 
-window.plugin.maxfieldplanner.arrayMissions = {};
-window.plugin.maxfieldplanner.selectedMissionIndex = null;
+window.plugin.maxfieldplanner._localStorageKey = "plugin-maxfieldplanner-missions";
+window.plugin.maxfieldplanner._missionsCache = {};
+window.plugin.maxfieldplanner._localStorageLastUpdate = 0;
+window.plugin.maxfieldplanner._missionIndex = null;
 
 // Functions
-
+// Set up GUI HTML
 window.plugin.maxfieldplanner.setupHTML = function() {
-  $('<div id="maxfieldplanner-container">')
-    .html('<div id="maxfieldplanner-content"><div id="contentForm"><form action="" method="POST"><input type="text" name="pavadinimas" style="width:100%"><br/><input style="margin-left:auto;margin-right:auto;width:100px;" type="submit" value="Submit"><ul id="missionPortals"><li>testy</li><li>testy</li><li>testy</li><li>testy</li><li>testy</li></ul></form></div></div><a id="maxfieldplanner-toggle"><span class="toggle open"></span></a>')
-    .appendTo("body");
+  var container = $('<div id="maxfieldplanner-container">');
+  $(container).append('<div id="toolbarForm" class="drawtoolsSetbox"><a onclick="window.plugin.maxfieldplanner.save();">Save ALL missions to browser storage</a></div>');
+  $(container).append('<div id="contentForm"><form action="" method="POST"><input type="text" name="missionName" style="width:100%"><br/><input style="margin-left:auto;margin-right:auto;width:100px;" type="submit" value="Submit"></form></div>');
+  $(container).append('<ul id="missionPortals"><li>testy</li><li>testy</li><li>testy</li><li>testy</li><li>testy</li></ul>');
+  return container;
 };
 
-window.plugin.maxfieldplanner.setupJS = function() {
-  $("#maxfieldplanner-toggle").click(function(e){
-    $("span",this).toggleClass("open").toggleClass("close");
-    $("#maxfieldplanner-content").toggle();
-  });
-};
-
+// Inject css file
 window.plugin.maxfieldplanner.setupCSS = function() {
   $("<style>")
     .prop("type", "text/css")
     .html("@@INCLUDESTRING:plugins/maxfieldplanner.css@@")
     .appendTo("head");
+};
+// Draw popup for main interface
+window.maxfieldplannerGUI = function() {
+    window.plugin.maxfieldplanner.load();
+    var dlg = dialog({title:'MaxField planner',html:'Loading GUI...',width:450,minHeight:320});
+    dlg.html(window.plugin.maxfieldplanner.setupHTML);
+    window.plugin.maxfieldplanner.load();
+    window.addHook('portalSelected', window.selectPortal);
+};
+
+// Save missions array to localstorage
+window.plugin.maxfieldplanner.save = function() {
+  if(window.plugin.maxfieldplanner._localStorageLastUpdate < Date.now() - 10*1000) {
+    try {
+      localStorage[window.plugin.maxfieldplanner._localStorageKey] = JSON.stringify(window.plugin.maxfieldplanner._missionsCache);
+      window.plugin.maxfieldplanner._localStorageLastUpdate = Date.now();
+      console.log("[plugin.maxfieldplanner] Saved missions to "+window.plugin.maxfieldplanner._localStorageKey);
+      return true;
+    } catch(e) {
+    }
+  }
+    return false;
+};
+// Load missions array from localstorage
+window.plugin.maxfieldplanner.load = function() {
+  try {
+    var cache = JSON.parse(localStorage[window.plugin.maxfieldplanner._localStorageKey]);
+    window.plugin.maxfieldplanner._missionsCache = cache;
+    window.plugin.maxfieldplanner._localStorageLastUpdate = Date.now();
+    console.log("[plugin.maxfieldplanner] Loaded missions from "+window.plugin.maxfieldplanner._localStorageKey);
+    return true;
+  } catch(e) {
+  }
+  return false;
 };
 
 
@@ -67,60 +99,15 @@ window.selectPortal = function(data) {
     var t = '<span class="portallevel">L0</span>';
   else
     var t = '<span class="portallevel" style="background: '+COLORS_LVL[lvl]+';">L' + lvl + '</span>';
-
-  var percentage = data.health;
-  if(details) {
-    var totalEnergy = getTotalPortalEnergy(details);
-    if(getTotalPortalEnergy(details) > 0) {
-      percentage = Math.floor(getCurrentPortalEnergy(details) / totalEnergy * 100);
-    }
-  }
-  t += ' ' + percentage + '% ';
   t += data.title;
 
-  if(details) {
-    var l,v,max,perc;
-    var eastAnticlockwiseToNorthClockwise = [2,1,0,7,6,5,4,3];
-
-    for(var ind=0;ind<8;ind++)
-    {
-      if(details.resonators.length == 8) {
-        var slot = eastAnticlockwiseToNorthClockwise[ind];
-        var reso = details.resonators[slot];
-      } else {
-        var slot = null;
-        var reso = ind < details.resonators.length ? details.resonators[ind] : null;
-      }
-
-      var className = TEAM_TO_CSS[getTeam(details)];
-      if(slot !== null && OCTANTS[slot] === 'N')
-        className += ' north';
-      if(reso) {
-        l = parseInt(reso.level);
-        v = parseInt(reso.energy);
-        max = RESO_NRG[l];
-        perc = v/max*100;
-      } else {
-        l = 0;
-        v = 0;
-        max = 0;
-        perc = 0;
-      }
-
-      t += '<div class="resonator '+className+'" style="border-top-color: '+COLORS_LVL[l]+';left: '+(100*ind/8.0)+'%;">';
-      t += '<div class="filllevel" style="width:'+perc+'%;"></div>';
-      t += '</div>';
-    }
-  }
   $("#missionPortals").append("<li>"+t+"</li>");
 };
 
 
 var setup = function() {
     window.plugin.maxfieldplanner.setupCSS();
-    window.plugin.maxfieldplanner.setupHTML();
-    window.plugin.maxfieldplanner.setupJS();
-    window.addHook('portalSelected', window.selectPortal);
+    $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
 };
 
 // PLUGIN END //////////////////////////////////////////////////////////
