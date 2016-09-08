@@ -1,0 +1,55 @@
+#contentForm {
+  padding:10px;
+}
+
+#maxfieldplanner-toggle {
+  top:-1px;
+  position:relative;
+  width:20px;
+  margin:0 auto;
+  padding:5px 20px;
+  display:block;
+  background-color:rgba(8, 48, 78, 0.9);
+  color:#FFCE00;
+  border:1px solid #20A8B1;
+  border-top:none;
+  border-radius:0px 0px 5px 5px;
+  text-decoration:none;
+}
+
+#maxfieldplanner-toggle .close {
+  border-bottom:10px solid #FFCE00;
+  border-top:10px solid transparent;
+}
+
+#maxfieldplanner-toggle .open {
+  border-top:10px solid #FFCE00;
+  border-bottom:10px solid transparent;
+}
+
+#maxfieldplanner-toggle .toggle {
+  display:block;
+  line-height:10px;
+  border-left:10px solid transparent;
+  border-right:10px solid transparent;
+}
+
+#maxfieldplanner-container {
+  position:absolute;
+  z-index:3002;
+  display:block;
+  top:0px;
+  margin-left:-25px;
+  width:50%;
+  left:25%;
+}
+
+#maxfieldplanner-content {
+  display:none;
+  background-color:rgba(8, 48, 78, 0.9);
+  color:#FFCE00;
+  border:1px solid #20A8B1;
+  border-top:none;
+  border-radius:0px 0px 5px 5px;
+  text-decoration:none;
+}
