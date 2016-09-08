@@ -29,7 +29,17 @@ window.plugin.maxfieldplanner = function() {};
 // Plugin variables and local storage data
 
 window.plugin.maxfieldplanner._localStorageKey = "plugin-maxfieldplanner-missions";
-window.plugin.maxfieldplanner._missionsCache = {};
+window.plugin.maxfieldplanner._missionsCache = {
+  "0": {
+    name: "",
+    agents: null,
+    portals: {
+      "guid":"portal.object"
+    }
+  }
+};
+window.plugin.maxfieldplanner._missionCache = {
+};
 window.plugin.maxfieldplanner._localStorageLastUpdate = 0;
 window.plugin.maxfieldplanner._missionIndex = null;
 
@@ -61,7 +71,7 @@ window.maxfieldplannerGUI = function() {
     window.plugin.maxfieldplanner.load();
 };
 
-// Save missions array to localstorage
+// Save missions object to localstorage
 window.plugin.maxfieldplanner.save = function() {
   if(window.plugin.maxfieldplanner._localStorageLastUpdate < Date.now() - 10*1000) {
     try {
@@ -74,7 +84,7 @@ window.plugin.maxfieldplanner.save = function() {
   }
     return false;
 };
-// Load missions array from localstorage
+// Load missions object from localstorage
 window.plugin.maxfieldplanner.load = function() {
   try {
     var cache = JSON.parse(localStorage[window.plugin.maxfieldplanner._localStorageKey]);
@@ -90,32 +100,55 @@ window.plugin.maxfieldplanner.load = function() {
 
 // Main portal assignment to plan
 // TESTING AREA
-// TODO assign to array, auto update GUI, auto save if not too often
+// TODO assign to object, auto update GUI, auto save if not too often
 window.selectPortal = function(data) {
   var guid = data;
+
+  // No portal? Exit
   if(!window.portals[guid]) return;
+  console.log("Selecting portal:"+guid);
 
-  var data = window.portals[guid].options.data;
+
+  // No current mission, exit
+  if(!window.plugin.maxfieldplanner._missionsCache[window.plugin.maxfieldplanner._missionIndex]) return;
+  // Get current mission
+  var mission = window.plugin.maxfieldplanner._missionsCache[window.plugin.maxfieldplanner._missionIndex];
+
+  // One portal object
+  var portal = {
+    name: "",
+    pos_lng: "",
+    pos_lat: "",
+    level: "",
+    team: ""
+  };
+  // Extract required portal data fields
+  data = window.portals[guid].options.data;
   var details = window.portalDetail.get(guid);
+  portal.name = data.title;
+  portal.pos_lng = data.title;
+  portal.pos_lat = data.title;
+  portal.level = data.level;
+  portal.team = data.team;
 
-  var lvl = data.level;
-  if(data.team === "NEUTRAL")
-    var t = '<span class="portallevel">L0</span>';
-  else
-    var t = '<span class="portallevel" style="background: '+COLORS_LVL[lvl]+';">L' + lvl + '</span>';
-  t += data.title;
-
-  $("#missionPortals").append("<li>"+t+"</li>");
+  // Add portal to mission, overwrite if exists
+  mission.portals[guid] = portal;
+  // Save mission
+  window.plugin.maxfieldplanner._missionsCache[window.plugin.maxfieldplanner._missionIndex] = mission;
+  console.log(window.plugin.maxfieldplanner._missionsCache);
+  window.plugin.maxfieldplanner.save();
 };
 
 
 var setup = function() {
-    // Injects CSS file
-    window.plugin.maxfieldplanner.setupCSS();
-    // Injects link to main #toolbax "Maxfield planner"
-    $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
-    // Hooks on "portalSelected" to intercept selected portal for adding to current plan
-    window.addHook('portalSelected', window.selectPortal);
+  // Injects CSS file
+  window.plugin.maxfieldplanner.setupCSS();
+  // Injects link to main #toolbax "Maxfield planner"
+  $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
+  // Hooks on "portalSelected" to intercept selected portal for adding to current plan
+  window.addHook('portalSelected', window.selectPortal);
+  // Testing index
+  window.plugin.maxfieldplanner._missionIndex = 0;
 
 };
 
