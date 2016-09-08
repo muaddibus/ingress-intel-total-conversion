@@ -1,12 +1,12 @@
 // ==UserScript==
-// @id             maxfieldplanne@muaddibus
+// @id             maxfieldplanner@muaddibus
 // @name           IITC plugin: MaxField planner (Portal, agent data -> web / script )
 // @category       Data
-// @version        0.0.1.@@DATETIMEVERSION@@
+// @version        0.0.2.@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      @@UPDATEURL@@
 // @downloadURL    @@DOWNLOADURL@@
-// @description    [@@BUILDNAME@@-@@BUILDDATE@@] Prepares portal and agent data for MaxField script, posts (forwards) entered data to webpage / writes ready scriptm, for plan generation with MaxField script.
+// @description    [@@BUILDNAME@@-@@BUILDDATE@@] Prepares portal and agent data for MaxField script, posts entered data to webpage / writes ready script, for plan generation with MaxField script.
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -33,8 +33,8 @@ window.plugin.maxfieldplanner._missionsCache = {};
 window.plugin.maxfieldplanner._localStorageLastUpdate = 0;
 window.plugin.maxfieldplanner._missionIndex = null;
 
-// Functions
 // Set up GUI HTML
+
 window.plugin.maxfieldplanner.setupHTML = function() {
   var container = $('<div id="maxfieldplanner-container">');
   $(container).append('<div id="toolbarForm" class="drawtoolsSetbox"><a onclick="window.plugin.maxfieldplanner.save();">Save ALL missions to browser storage</a></div>');
@@ -43,20 +43,22 @@ window.plugin.maxfieldplanner.setupHTML = function() {
   return container;
 };
 
-// Inject css file
+// Inject CSS file
+
 window.plugin.maxfieldplanner.setupCSS = function() {
   $("<style>")
     .prop("type", "text/css")
     .html("@@INCLUDESTRING:plugins/maxfieldplanner.css@@")
     .appendTo("head");
 };
+
 // Draw popup for main interface
+
 window.maxfieldplannerGUI = function() {
     window.plugin.maxfieldplanner.load();
     var dlg = dialog({title:'MaxField planner',html:'Loading GUI...',width:450,minHeight:320});
     dlg.html(window.plugin.maxfieldplanner.setupHTML);
     window.plugin.maxfieldplanner.load();
-    window.addHook('portalSelected', window.selectPortal);
 };
 
 // Save missions array to localstorage
@@ -86,7 +88,9 @@ window.plugin.maxfieldplanner.load = function() {
 };
 
 
-// Main assignment
+// Main portal assignment to plan
+// TESTING AREA
+// TODO assign to array, auto update GUI, auto save if not too often
 window.selectPortal = function(data) {
   var guid = data;
   if(!window.portals[guid]) return;
@@ -106,8 +110,13 @@ window.selectPortal = function(data) {
 
 
 var setup = function() {
+    // Injects CSS file
     window.plugin.maxfieldplanner.setupCSS();
+    // Injects link to main #toolbax "Maxfield planner"
     $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
+    // Hooks on "portalSelected" to intercept selected portal for adding to current plan
+    window.addHook('portalSelected', window.selectPortal);
+
 };
 
 // PLUGIN END //////////////////////////////////////////////////////////
