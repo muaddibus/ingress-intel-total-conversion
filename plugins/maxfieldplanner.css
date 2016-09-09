@@ -5,3 +5,8 @@
 #maxfieldplanner-container {
   display:block;
 }
+#toolbarForm.drawtoolsSetbox > a {
+  width:30%;
+  display:inline-block;
+  margin-right:10px;
+}
