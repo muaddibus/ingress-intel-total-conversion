@@ -234,6 +234,19 @@ window.addPortaltoPlan = function(data) {
 };
 
 
+window.plugin.maxfieldplanner.highlight = function(data) {
+  var guid = data.portal.options.guid;
+  console.log(guid);
+  // if in my array black
+  //if 
+  var color,fill_opacity;
+  color = 'black';
+  fill_opacity = 70;
+  var params = {fillColor: color, fillOpacity: fill_opacity};
+  data.portal.setStyle(params);
+};
+
+
 var setup = function() {
   // Injects CSS file
   //window.plugin.maxfieldplanner.load();
@@ -242,6 +255,7 @@ var setup = function() {
   $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
   // Hooks on "portalDetailsUpdated" to intercept selected portal for adding to current plan
   window.addHook('portalDetailsUpdated', window.addPortaltoPlan);
+  window.addPortalHighlighter('Needs Recharge (Health)', window.plugin.maxfieldplanner.highlight);
   // Testing index
   window.plugin.maxfieldplanner._planIndex = 0;
 
