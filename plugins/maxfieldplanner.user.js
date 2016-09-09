@@ -1,6 +1,6 @@
 // ==UserScript==
 // @id             maxfieldplanner@muaddibus
-// @name           IITC plugin: MaxField planner (Portal, agent data -> web / script )
+// @name           IITC plugin: MaxField planner (Plan = Portal, agent data -> web / script )
 // @category       Data
 // @version        0.1.0.@@DATETIMEVERSION@@
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
@@ -31,7 +31,7 @@ window.plugin.maxfieldplanner = function() {};
 window.plugin.maxfieldplanner._localStorageKey = "plugin-maxfieldplanner-plans";
 window.plugin.maxfieldplanner._plansCache = {
   "0": {
-    name: "Testinis planas",
+    name: "Test plan",
     agents: 2,
     portals: {
       "guid":"portal.object"
@@ -117,31 +117,22 @@ window.plugin.maxfieldplanner.load = function() {
 // Clear all plans from local storage
 window.plugin.maxfieldplanner.clearLocalstorage = function() {
 if(window.plugin.maxfieldplanner.statusEditMode()) {
-  $('<div></div>').appendTo('body')
-    .html('<div><h6>Are you sure?</h6></div>')
-    .dialog({
-      modal: true,
-      title: 'Delete message',
-      zIndex: 10000,
-      autoOpen: true,
-      width: 'auto',
-      resizable: false,
-      buttons: {
-        Yes: function () {
-          window.plugin.maxfieldplanner._plansCache = {};
-          window.plugin.maxfieldplanner.save(true);
-          console.log("[plugin.maxfieldplanner] Plans purged.");
-          window.plugin.maxfieldplanner.reloadPlanList();
-          $(this).dialog("close");
-        },
-        No: function () {
-          $(this).dialog("close");
-        }
-      },
-      close: function (event, ui) {
-        $(this).remove();
-      }
-    });
+  dialog({
+    id: 'plugin-maxfield-planner',
+    title: "All plans WILL BE PURGED!",
+    height: 'auto',
+    html: "You should really think twise! All plans will be purged permamently!",
+    width: '450px',
+  }).dialog('option', 'buttons', {
+    'Purge': function() {
+      window.plugin.maxfieldplanner._plansCache = {};
+      window.plugin.maxfieldplanner.save(true);
+      console.log("[plugin.maxfieldplanner] Plans purged.");
+      window.plugin.maxfieldplanner.reloadPlanList();
+      $(this).dialog("close");
+    },
+    'Cancel': function() { $(this).dialog('close'); },
+  });
 }
 };
 
@@ -249,7 +240,7 @@ var setup = function() {
   window.plugin.maxfieldplanner.setupCSS();
   // Injects link to main #toolbax "Maxfield planner"
   $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
-  // Hooks on "portalSelected" to intercept selected portal for adding to current plan
+  // Hooks on "portalDetailsUpdated" to intercept selected portal for adding to current plan
   window.addHook('portalDetailsUpdated', window.addPortaltoPlan);
   // Testing index
   window.plugin.maxfieldplanner._planIndex = 0;
