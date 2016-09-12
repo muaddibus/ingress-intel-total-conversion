@@ -41,10 +41,10 @@ window.plugin.maxfieldplanner._plansCache = {
 //window.plugin.maxfieldplanner._plansCache = {};
 window.plugin.maxfieldplanner._localStorageLastUpdate = 0;
 window.plugin.maxfieldplanner._planIndex = null;
+window.plugin.maxfieldplanner._oldHighlighter = null;
 window.plugin.maxfieldplanner._editable = false;
 
 // Set up GUI HTML
-
 window.plugin.maxfieldplanner.setupHTML = function() {
   var container = $('<div id="maxfieldplanner-container">');
   $(container).append('<div id="toolbarForm" class="drawtoolsSetbox"><button id="toggleEdit" onclick="window.plugin.maxfieldplanner.toggleEditMode();" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">Edit plans (Status:disabled)</span></button><button onclick="window.plugin.maxfieldplanner.save(true);" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">Save all plans</span></button><button onclick="window.plugin.maxfieldplanner.clearLocalstorage();" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button"><span class="ui-button-text">Clear ALL from broser storage</span></button>');
@@ -171,18 +171,19 @@ window.plugin.maxfieldplanner.reloadPlanPortalsList = function() {
 
 // Enable/disable/get status of  edit mode
 window.plugin.maxfieldplanner.enableEditMode = function () {
-    window.plugin.maxfieldplanner._editable = true;
-    window.changePortalHighlights('MaxField planner');
-    $("#toggleEdit > span").html("Edit plans (Status:enabled)");
+  window.plugin.maxfieldplanner._editable = true;
+  window.plugin.maxfieldplanner._oldHighlighter = window._current_highlighter;
+  window.changePortalHighlights('MaxField planner');
+  $("#toggleEdit > span").html("Edit plans (Status:enabled)");
   console.log("[plugin.maxfieldplanner] Editable: "+window.plugin.maxfieldplanner.statusEditMode());
 };
 window.plugin.maxfieldplanner.disableEditMode = function () {
-    // Save before exiting edit mode
-    window.plugin.maxfieldplanner.save(true);
-    window.plugin.maxfieldplanner._editable = false;
-    window.changePortalHighlights('');
-    $("#toggleEdit > span").html("Edit plans (Status:disabled)");
-    console.log("[plugin.maxfieldplanner] Editable: "+window.plugin.maxfieldplanner.statusEditMode());
+  // Save before exiting edit mode
+  window.plugin.maxfieldplanner.save(true);
+  window.plugin.maxfieldplanner._editable = false;
+  window.changePortalHighlights(window.plugin.maxfieldplanner._oldHighlighter);
+  $("#toggleEdit > span").html("Edit plans (Status:disabled)");
+  console.log("[plugin.maxfieldplanner] Editable: "+window.plugin.maxfieldplanner.statusEditMode());
 };
 window.plugin.maxfieldplanner.statusEditMode = function () {
     return window.plugin.maxfieldplanner._editable;
@@ -205,33 +206,40 @@ window.plugin.maxfieldplanner.toggleEditMode = function () {
 };
 
 // Main portal assignment to plan
-// TESTING AREA
-// TODO assign to object, auto update GUI, onclose and auto save
 window.addPortaltoPlan = function(data) {
   if(window.plugin.maxfieldplanner.statusEditMode()) {
   var guid = data.guid;
 
   // No current plan, exit
   if(!window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex]) return;
-  // Get current plan
+  // Get current plan for modifications
   var plan = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex];
 
-  // One portal object
-  var portal = {};
-  // Extract required portal data fields
-  portal.name = data.portalData.title;
-  portal.pos_lng =data.portal._latlng.lng;
-  portal.pos_lat = data.portal._latlng.lat;
-  portal.level = data.portalData.level;
-  portal.team = data.portalData.team;
-//  console.log("[plugin.maxfieldplanner] Portal:");
-//  console.log(portal);
-  // Add portal to plan, overwrite if exists
-  plan.portals[guid] = portal;
-  // Save plan
+  if(plan.portals[guid]!== undefined) {
+    // One portal object
+    var portal = {};
+    // Extract required portal data fields
+    portal.name = data.portalData.title;
+    portal.pos_lng =data.portal._latlng.lng;
+    portal.pos_lat = data.portal._latlng.lat;
+    portal.level = data.portalData.level;
+    portal.team = data.portalData.team;
+    console.log("[plugin.maxfieldplanner] Portal:");
+    console.log(portal);
+    // Add portal to plan
+    plan.portals[guid] = portal;
+    // Save plan to array
+  } else {
+    // Remove portal from plan if already exists
+    var portals = plan.portals;
+    for(var i = portals.length-1; i--;){
+      if (portals[i] === guid) portals.splice(i, 1);
+    }
+    plan.portals = portals;
+  }
   window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex] = plan;
-  window.plugin.maxfieldplanner.reloadPlanList();
   window.plugin.maxfieldplanner.save(true);
+  window.plugin.maxfieldplanner.reloadPlanList();
   }
 };
 
