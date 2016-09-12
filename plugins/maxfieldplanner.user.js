@@ -127,7 +127,7 @@ if(window.plugin.maxfieldplanner.statusEditMode()) {
     'Purge': function() {
       window.plugin.maxfieldplanner._plansCache = {};
       window.plugin.maxfieldplanner.save(true);
-      console.log("[plugin.maxfieldplanner] Plans purged.");
+      console.log("[plugin.maxfieldplanner] Plans purged!!!");
       window.plugin.maxfieldplanner.reloadPlanList();
       $(this).dialog("close");
     },
@@ -172,6 +172,7 @@ window.plugin.maxfieldplanner.reloadPlanPortalsList = function() {
 // Enable/disable/get status of  edit mode
 window.plugin.maxfieldplanner.enableEditMode = function () {
     window.plugin.maxfieldplanner._editable = true;
+    window.changePortalHighlights('MaxField planner');
     $("#toggleEdit > span").html("Edit plans (Status:enabled)");
   console.log("[plugin.maxfieldplanner] Editable: "+window.plugin.maxfieldplanner.statusEditMode());
 };
@@ -179,8 +180,9 @@ window.plugin.maxfieldplanner.disableEditMode = function () {
     // Save before exiting edit mode
     window.plugin.maxfieldplanner.save(true);
     window.plugin.maxfieldplanner._editable = false;
+    window.changePortalHighlights('');
     $("#toggleEdit > span").html("Edit plans (Status:disabled)");
-  console.log("[plugin.maxfieldplanner] Editable: "+window.plugin.maxfieldplanner.statusEditMode());
+    console.log("[plugin.maxfieldplanner] Editable: "+window.plugin.maxfieldplanner.statusEditMode());
 };
 window.plugin.maxfieldplanner.statusEditMode = function () {
     return window.plugin.maxfieldplanner._editable;
@@ -222,8 +224,8 @@ window.addPortaltoPlan = function(data) {
   portal.pos_lat = data.portal._latlng.lat;
   portal.level = data.portalData.level;
   portal.team = data.portalData.team;
-  console.log("[plugin.maxfieldplanner] Portal:");
-  console.log(portal);
+//  console.log("[plugin.maxfieldplanner] Portal:");
+//  console.log(portal);
   // Add portal to plan, overwrite if exists
   plan.portals[guid] = portal;
   // Save plan
@@ -236,14 +238,14 @@ window.addPortaltoPlan = function(data) {
 
 window.plugin.maxfieldplanner.highlight = function(data) {
   var guid = data.portal.options.guid;
-  console.log(guid);
   // if in my array black
-  //if 
-  var color,fill_opacity;
-  color = 'black';
-  fill_opacity = 70;
-  var params = {fillColor: color, fillOpacity: fill_opacity};
-  data.portal.setStyle(params);
+  if(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals[guid]!== undefined) {
+    var color,fill_opacity;
+    color = 'black';
+    fill_opacity = 100;
+    var params = {fillColor: color, fillOpacity: fill_opacity};
+    data.portal.setStyle(params);
+  }
 };
 
 
@@ -255,7 +257,7 @@ var setup = function() {
   $("#toolbox").append('<a onclick="window.maxfieldplannerGUI()" title="Make and submit plan to maxfield script">Maxfield planner</a>');
   // Hooks on "portalDetailsUpdated" to intercept selected portal for adding to current plan
   window.addHook('portalDetailsUpdated', window.addPortaltoPlan);
-  window.addPortalHighlighter('Needs Recharge (Health)', window.plugin.maxfieldplanner.highlight);
+  window.addPortalHighlighter('MaxField planner', window.plugin.maxfieldplanner.highlight);
   // Testing index
   window.plugin.maxfieldplanner._planIndex = 0;
 
