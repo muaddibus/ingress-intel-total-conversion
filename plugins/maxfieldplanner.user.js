@@ -68,6 +68,34 @@ window.plugin.maxfieldplanner.setupCSS = function() {
     .html("#maxfieldplanner-container {\
 		display:block;\
 	    }\
+	    ::-webkit-scrollbar {\
+	      width: 3px;\
+	      height: 3px;\
+	    }\
+	    ::-webkit-scrollbar-button {\
+	      width: 3px;\
+	      height: 3px;\
+	    }\
+	    ::-webkit-scrollbar-thumb {\
+	      background: #ffce00;\
+	      border:none;\
+	    }\
+	    ::-webkit-scrollbar-thumb:hover {\
+	      background: #20A8B1;\
+	    }\
+	    ::-webkit-scrollbar-thumb:active {\
+	      background: #20A8B1;\
+	    }\
+	    ::-webkit-scrollbar-track {\
+	      background: rgba(0, 0, 0, 0.6);\
+	      border:none;\
+	    }\
+	    ::-webkit-scrollbar-corner {\
+	      background: transparent;\
+	    }\
+	    hr {\
+		color:#FFCE00;\
+	    }\
 	    #plansList {\
 		width:60%;\
 		padding:1px;\
@@ -85,6 +113,9 @@ window.plugin.maxfieldplanner.setupCSS = function() {
 	    }\
 	    #maxfieldplanner-portals {\
 		list-style-type:none;\
+		display:block;\
+		height:200px;\
+		overflow-y:auto;\
 		padding:0px;\
 		margin:0px;\
 		border:1px solid #FFCE00;\
@@ -92,19 +123,33 @@ window.plugin.maxfieldplanner.setupCSS = function() {
 	    #maxfieldplanner-portals > li {\
 		border-bottom:1px solid #FFCE00;\
 		color:#FFCE00;\
-		padding:2px;\
 	    }\
 	    #maxfieldplanner-portals > li:HOVER {\
-		background-color: rgba(0, 0, 0, 0.3);\
+		background-color: rgba(0, 0, 0, 0.6);\
 	    }\
 	    #maxfieldplanner-portals > li:last-child {\
 		border-bottom:none;\
 	    }\
 	    #maxfieldplanner-portals > li > .portal_info {\
 	    }\
+	    #maxfieldplanner-portals > li > .portal_info > .lvl_E {\
+		display:table-cell;\
+		background:green;\
+		padding:3px;\
+	    }\
+	    #maxfieldplanner-portals > li > .portal_info > .lvl_R {\
+		display:table-cell;\
+		background:blue;\
+		padding:3px;\
+	    }\
+	    #maxfieldplanner-portals > li > .portal_info > .name {\
+		display:table-cell;\
+		padding:3px;\
+	    }\
 	    #maxfieldplanner-portals > li > .portal_toolbar {\
-		display:inline-block;\
+		display:table-cell;\
 		float:right;\
+		padding:3px;\
 	    }\
 	    ")
     .appendTo("head");
@@ -129,6 +174,7 @@ window.maxfieldplannerGUI = function() {
     window.plugin.maxfieldplanner.enableEditMode();
   }
   window.plugin.maxfieldplanner.reloadPlanList();
+  window.plugin.maxfieldplanner.setHighlighter();
 };
 
 // Hightlight selected portal
@@ -321,7 +367,7 @@ window.plugin.maxfieldplanner.reloadPlanPortals = function() {
 //  console.log("[plugin.maxfieldplanner] Portal list refresh Portal count:"+Object.keys(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals).length);
   if(Object.keys(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals).length>0) {
     $.each(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals, function(guid,portal) {
-      $('#maxfieldplanner-portals').append('<li id="'+portal.guid+'" data-lat="'+portal.pos_lat+'" data-lng="'+portal.pos_lng+'"><span class="portal_info">'+portal.level+' '+portal.name+' '+portal.team+'</span><span class="portal_toolbar">X</span></li>');
+      $('#maxfieldplanner-portals').append('<li id="'+portal.guid+'" data-lat="'+portal.pos_lat+'" data-lng="'+portal.pos_lng+'"><span class="portal_info"><span class="lvl_'+portal.team+'">'+portal.level+'</span><span class="name">'+portal.name+'</span></span><span class="portal_toolbar">X</span></li>');
     });
   }
   // Bind portal indicator on mouse over and out
