@@ -38,13 +38,7 @@ window.plugin.maxfieldplanner.log = function(text) {
 window.plugin.maxfieldplanner._localStorageKeyPlans = "plugin-maxfieldplanner-plans";
 window.plugin.maxfieldplanner._localStorageKeyIndex = "plugin-maxfieldplanner-index";
 window.plugin.maxfieldplanner._localStorageKeyOldHighlighter = "plugin-maxfieldplanner-oldhighliter";
-window.plugin.maxfieldplanner._plansCache = {
-    0:{
-	name:"Test",
-	agents: 4,
-	portals:{}
-    }
-};
+window.plugin.maxfieldplanner._plansCache = [];
 window.plugin.maxfieldplanner._localStorageLastUpdate = 0;
 window.plugin.maxfieldplanner._planIndex = localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex];
 window.plugin.maxfieldplanner._editable = false;
@@ -186,8 +180,7 @@ window.maxfieldplannerGUI = function() {
 
   // Bind plan selector
   $('#plansList').change(function(){
-    window.plugin.maxfieldplanner._planIndex = $(this).val();
-    localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex] = window.plugin.maxfieldplanner._planIndex;
+    window.plugin.maxfieldplanner._planIndex = localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex] = $(this).val();
     window.plugin.maxfieldplanner.reloadPlanList();
     window.plugin.maxfieldplanner.setHighlighter();
   });
@@ -243,15 +236,22 @@ window.plugin.maxfieldplanner.savePlans = function(disabled_timer) {
 // Load plans from localstorage
 window.plugin.maxfieldplanner.loadPlans = function() {
     var cache = JSON.parse(localStorage[window.plugin.maxfieldplanner._localStorageKeyPlans]);
-    window.plugin.maxfieldplanner._plansCache = cache;
-    window.plugin.maxfieldplanner._planIndex = localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex];
+    window.plugin.maxfieldplanner._plansCache = Object.keys(cache).map(function(k) { return cache[k]; });
+//    window.plugin.maxfieldplanner._planIndex = localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex];
     // Set to first plan in array
+    var temp = window.plugin.maxfieldplanner._plansCache;
+    for(var id in temp) {
+      var plan = temp[id];
+      var portals = Object.keys(plan.portals).map(function(k) { return plan.portals[k]; });
+      plan.portals = portals;
+      window.plugin.maxfieldplanner._plansCache[id]=plan;
+    }
     if(window.plugin.maxfieldplanner._planIndex===null) {
       for(var elem in window.plugin.maxfieldplanner._plansCache)
-            window.plugin.maxfieldplanner._planIndex = elem;
+            window.plugin.maxfieldplanner._planIndex = localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex] = elem;
     }
     window.plugin.maxfieldplanner.log("Loaded plans from localStorage");
-    window.plugin.maxfieldplanner.log("Plan count:"+Object.keys(window.plugin.maxfieldplanner._plansCache).length);
+    window.plugin.maxfieldplanner.log("Plan count:"+window.plugin.maxfieldplanner._plansCache.length);
 };
 
 // Clear all plans from local storage
@@ -339,6 +339,17 @@ window.plugin.maxfieldplanner.toggleEditMode = function () {
 
 // New plan
 window.plugin.maxfieldplanner.newPlan = function() {
+  if(window.plugin.maxfieldplanner.statusEditMode()) {
+    var planas = {
+	name:"New plan [rename it]",
+	agents: 1,
+	portals:[]
+    };
+    window.plugin.maxfieldplanner.log("Adding plan...");
+    window.plugin.maxfieldplanner._planIndex = localStorage[window.plugin.maxfieldplanner._localStorageKeyIndex] = window.plugin.maxfieldplanner._plansCache.push(planas)-1;
+    window.plugin.maxfieldplanner.savePlans(true);
+    window.plugin.maxfieldplanner.reloadPlanList();
+  }
 };
 
 // Delete plan
@@ -348,28 +359,18 @@ window.plugin.maxfieldplanner.deletePlan = function(id) {
 // Refresh plan list
 window.plugin.maxfieldplanner.reloadPlanList = function() {
   $('#plansList').html('');
-  window.plugin.maxfieldplanner.log("Reload plan list Plan count:"+Object.keys(window.plugin.maxfieldplanner._plansCache).length);
-  if(Object.keys(window.plugin.maxfieldplanner._plansCache).length>0) {
-    $.each(window.plugin.maxfieldplanner._plansCache, function(id,plan) {
-      var mp,ma;
-      if(plan.portals) {
-        mp = Object.keys(plan.portals).length;
-      } else{
-        mp = 0;
-      }
-      if(plan.agents) {
-        ma = Object.keys(plan.agents).length;
-      } else{
-        ma = 0;
-      }
-      var selected = "";
+  window.plugin.maxfieldplanner.log("Reload plan list. Plan count:"+window.plugin.maxfieldplanner._plansCache.length);
+  if(window.plugin.maxfieldplanner._plansCache.length>0) {
+    for(var id in window.plugin.maxfieldplanner._plansCache) {
+      var plan = window.plugin.maxfieldplanner._plansCache[id];
+      var selected = '';
       if(id===window.plugin.maxfieldplanner._planIndex) {
-        selected = " selected";
-        window.plugin.maxfieldplanner.reloadPlan();
+        selected = ' selected';
       }
-      $('#plansList').append('<option value="'+id+'"'+selected+'>'+plan.name+" (Prtl:"+mp+" | Agnt:"+ma+")</option>");
-    });
+      $('#plansList').append('<option value="'+id+'"'+selected+'>'+plan.name+" (Prtl:"+plan.portals.length+" | Agnt:"+plan.agents+")</option>");
+    }
   }
+  window.plugin.maxfieldplanner.reloadPlan();
   return false;
 };
 
@@ -418,11 +419,11 @@ window.plugin.maxfieldplanner.reloadPlanPortals = function() {
       zoomToAndShowPortal(guid, position);
   });
   $('.leaflet-draw-edit-remove').on('click',function () {
-    var guid = $(this).parent().parent().attr("data-guid");
-    console.log(guid);
-    window.removePortal4Plan(guid);
+    if(window.plugin.maxfieldplanner.statusEditMode()) {
+      var guid = $(this).parent().parent().attr("data-guid");
+      window.removePortal4Plan(guid);
+    }
   });
-
   return false;
 };
 
