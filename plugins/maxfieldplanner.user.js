@@ -195,11 +195,12 @@ window.maxfieldplannerGUI = function() {
 // Hightlight selected portal
 window.plugin.maxfieldplanner.highlight = function(data) {
   var guid = data.portal.options.guid;
+  console.log("HIGHLIGHT:"+guid);
   // if in my array -> highlight
   if(window.plugin.maxfieldplanner._plansCache===undefined || window.plugin.maxfieldplanner._planIndex==="null") return;
-  var portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
-  for(var portal_index in portals) {
-    if(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals[portal_index].guid===guid) {
+  var t_portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
+  for(var portal_index in t_portals) {
+    if(t_portals[portal_index].guid===guid) {
       var color,fill_opacity;
       color = 'black';
       fill_opacity = 100;
@@ -389,10 +390,10 @@ window.plugin.maxfieldplanner.reloadPlanPortals = function() {
   $('#maxfieldplanner-portals').html('');
   window.plugin.maxfieldplanner.log("Portal list refresh. Portal count:"+window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals.length);
   if(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals.length>0) {
-    var portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
-    for(var portal_index in portals) {
-      var portal = portals[portal_index];
-      $('#maxfieldplanner-portals').append('<li data-guid="'+portal.guid+'" data-lat="'+portal.pos_lat+'" data-lng="'+portal.pos_lng+'"><span class="portal_info"><span class="lvl_'+portal.team+'">'+portal.level+'</span><span class="name">'+portal.name+'</span></span><span class="portal_toolbar"><a class="leaflet-draw-edit-remove" href="#" title="Delete portal"></a></span></li>');
+    var t_portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
+    for(var portal_index in t_portals) {
+      var t_portal = t_portals[portal_index];
+      $('#maxfieldplanner-portals').append('<li data-guid="'+t_portal.guid+'" data-lat="'+t_portal.pos_lat+'" data-lng="'+t_portal.pos_lng+'"><span class="portal_info"><span class="lvl_'+t_portal.team+'">'+t_portal.level+'</span><span class="name">'+t_portal.name+'</span></span><span class="portal_toolbar"><a class="leaflet-draw-edit-remove" href="#" title="Delete portal"></a></span></li>');
     }
   }
   // Bind portal indicator on mouse over and out
@@ -418,8 +419,8 @@ window.plugin.maxfieldplanner.reloadPlanPortals = function() {
     var position = L.latLng(lat, lng);
     if(!map.getBounds().contains(position)) map.setView(position);
 
-    var portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
-    for(var portal_index in portals) {
+    var t_portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
+    for(var portal_index in t_portals) {
       if(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals[portal_index].guid===guid)
         renderPortalDetails(guid);
       else
@@ -456,34 +457,60 @@ window.addPortal2Plan = function(data) {
     // get data
     var guid = data.selectedPortalGuid;
     // No current plan, exit
-    if(	!window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex]) return;
+    if(!window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex]) return;
     // Get current plan for modifications
     var plan = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex];
-
-    for(var portal_index in plan.portals) {
-      if(plan.portals[portal_index].guid===undefined) {
+    if(plan.portals.length===0) {
+      window.plugin.maxfieldplanner.log("Not found. Adding... :"+guid);
+      var t_portal = window.portalDetail.get(guid);
+      console.log(tportal);
+      if(t_portal) {
+        var i_portal = {};
+        // Extract required portal data fields
+        i_portal.name = t_portal.title;
+        i_portal.pos_lng = t_portal.lngE6/1E6;
+        i_portal.pos_lat = t_portal.latE6/1E6;
+        i_portal.level = t_portal.level;
+        i_portal.team = t_portal.team;
+        i_portal.image = t_portal.image;
+        i_portal.guid = guid;
+        plan.portals.push(i_portal);
+        window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex] = plan;
+        window.plugin.maxfieldplanner.log("Current plan index"+window.plugin.maxfieldplanner._planIndex);
+        window.plugin.maxfieldplanner.savePlans(true);
+        resetHighlightedPortals();
+        window.plugin.maxfieldplanner.reloadPlanList();
+      }
+    } else {
+      var exists = false;
+      for(var portal_index in plan.portals) {
+        if(plan.portals[portal_index].guid===guid) {
+          exists = true;
+        }
+      }
+      if(!exists) {
         window.plugin.maxfieldplanner.log("Not found. Adding... :"+guid);
-        var tportal = window.portalDetail.get(guid);
-        console.log(tportal);
-        if(tportal) {
-          var portal = {};
+        var t_portal = window.portalDetail.get(guid);
+        console.log(t_portal);
+        if(t_portal) {
+          var i_portal = {};
           // Extract required portal data fields
-          portal.name = tportal.title;
-          portal.pos_lng = tportal.lngE6/1E6;
-          portal.pos_lat = tportal.latE6/1E6;
-          portal.level = tportal.level;
-          portal.team = tportal.team;
-          portal.image = tportal.image;
-          portal.guid = guid;
-          plan.portals[guid] = portal;
+          i_portal.name = t_portal.title;
+          i_portal.pos_lng = t_portal.lngE6/1E6;
+          i_portal.pos_lat = t_portal.latE6/1E6;
+          i_portal.level = t_portal.level;
+          i_portal.team = t_portal.team;
+          i_portal.image = t_portal.image;
+          i_portal.guid = guid;
+          plan.portals.push(i_portal);
           window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex] = plan;
           window.plugin.maxfieldplanner.log("Current plan index"+window.plugin.maxfieldplanner._planIndex);
           window.plugin.maxfieldplanner.savePlans(true);
           resetHighlightedPortals();
           window.plugin.maxfieldplanner.reloadPlanList();
-        } else {
-          window.plugin.maxfieldplanner.log("Skipping portal adding.");
         }
+      } else {
+        window.plugin.maxfieldplanner.log("Skipping portal adding.");
       }
     }
   }
