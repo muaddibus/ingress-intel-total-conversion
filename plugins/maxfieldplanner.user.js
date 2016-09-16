@@ -195,7 +195,6 @@ window.maxfieldplannerGUI = function() {
 // Hightlight selected portal
 window.plugin.maxfieldplanner.highlight = function(data) {
   var guid = data.portal.options.guid;
-  console.log("HIGHLIGHT:"+guid);
   // if in my array -> highlight
   if(window.plugin.maxfieldplanner._plansCache===undefined || window.plugin.maxfieldplanner._planIndex==="null") return;
   var t_portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
@@ -420,12 +419,15 @@ window.plugin.maxfieldplanner.reloadPlanPortals = function() {
     if(!map.getBounds().contains(position)) map.setView(position);
 
     var t_portals = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals;
+    var exists = false;
     for(var portal_index in t_portals) {
       if(window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex].portals[portal_index].guid===guid)
-        renderPortalDetails(guid);
-      else
-        zoomToAndShowPortal(guid, position);
+        exists=true;
     }
+    if(exists)
+      renderPortalDetails(guid);
+    else
+      zoomToAndShowPortal(guid, position);
   });
   $('.leaflet-draw-edit-remove').on('click',function () {
     if(window.plugin.maxfieldplanner.statusEditMode()) {
@@ -463,7 +465,6 @@ window.addPortal2Plan = function(data) {
     if(plan.portals.length===0) {
       window.plugin.maxfieldplanner.log("Not found. Adding... :"+guid);
       var t_portal = window.portalDetail.get(guid);
-      console.log(tportal);
       if(t_portal) {
         var i_portal = {};
         // Extract required portal data fields
@@ -491,7 +492,6 @@ window.addPortal2Plan = function(data) {
       if(!exists) {
         window.plugin.maxfieldplanner.log("Not found. Adding... :"+guid);
         var t_portal = window.portalDetail.get(guid);
-        console.log(t_portal);
         if(t_portal) {
           var i_portal = {};
           // Extract required portal data fields
@@ -522,11 +522,10 @@ window.removePortal4Plan = function(guid) {
     if(!window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex]) return;
     // Get current plan for modifications
     var plan = window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex];
-
     for(var portal_index in plan.portals) {
       if(plan.portals[portal_index].guid===guid) {
         // Remove portal from plan if already exists
-        delete plan.portals[portal_index];
+        plan.portals.splice(portal_index,1);
         window.plugin.maxfieldplanner.log("Removing portal:"+guid);
         window.plugin.maxfieldplanner._plansCache[window.plugin.maxfieldplanner._planIndex] = plan;
         window.plugin.maxfieldplanner.savePlans(true);
